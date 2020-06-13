@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="pt-br">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.15/jquery.mask.min.js"></script>
+        <script src="https://code.iconify.design/1/1.0.2/iconify.min.js"></script>
+
+        <title>Gerenciamento financeiro</title>
+        <script>
+            function showAlert(msg){
+                if(msg !== ''){
+                    $("#statusAlert b").text(msg);
+
+                    $("#statusAlert").show();
+                    $("#statusAlert").fadeTo(2100, 500).slideUp(500, function(){
+                        $("#statusAlert").slideUp(500);
+                    }); 
+                }
+            }
+            function editSaldoInicial(saldoInicial){
+                if($("#idDivSaldoInicial").hasClass("d-none")){
+                    $("#inputSaldoInicial").val(saldoInicial);
+                    $("#idSpanBtnSaldoInicial").text("Editar");
+                    $("#idDivSaldoInicial").removeClass("d-none");
+                }
+                else 
+                    $("#idDivSaldoInicial").addClass("d-none");
+                
+            }
+            function deleteReceita(id){
+                fetch('/receita/' + id, {
+                    method: 'DELETE'
+                }).then(response => {
+                    response.json().then(json => {
+                        if(json.hasOwnProperty("success") && json["success"])
+                            window.location.reload(true);
+                    })
+                });
+            }
+            function deleteDespesa(id){
+                fetch('/despesa/' + id, {
+                    method: 'DELETE'
+                }).then(response => {
+                    response.json().then(json => {
+                        if(json.hasOwnProperty("success") && json["success"])
+                            window.location.reload(true);
+                    })
+                });
+            }
+        </script>
+    </head>
+    <body
+        {% if message %}
+            onload = "showAlert('{{message}}')"
+        {% endif %}>
+        <div class="container">
+            <h1>Gerenciamento financeiro</h1>
+            <h6>Feito em Python</h6>
+
+            <ul class="nav justify-content-center nav-pills">
+                <li class="nav-item border">
+                    <a class="nav-link active" href="/"><h4>Fluxo de caixa</h4></a>
+                </li>
+                <li class="nav-item border">
+                    <a class="nav-link" href="/despesa/"><h4>Nova despesa</h4></a>
+                </li>
+                <li class="nav-item border">
+                    <a class="nav-link" href="/receita/"><h4>Nova receita</h4></a>
+                </li>
+                <li class="nav-item border">
+                    <a class="nav-link" href="/relatorio/despesas"><h4>Contas a pagar</h4></a>
+                </li>
+                <li class="nav-item border">
+                    <a class="nav-link" href="/relatorio/receitas"><h4>Contas a receber</h4></a>
+                </li>
+            </ul>
+
+            <div class="mt-2 mb-2 alert alert-success alert-dismissible fade show" id="statusAlert" role="alert" style="display:none;" >
+                <span><b>teste</b></span>
+                <button type="button" id="btnCloseWarning" class="close"  aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            {% if saldoInicial != None %}  
+                {% if fluxo %}  
+                    <button type="button" class="btn btn-dark text-white font-weight-bold mt-5">
+                        Saldo atual R$ <span class="badge badge-light">
+                                {{saldoAtual}}
+                            </span>
+                    </button>
+                    <h4 class="mt-3 mb-4">Clique em cima de um título de um mês para esconder/detalhar as informações</h4>
+                {% else %}
+                    <h4 class="mt-3 mb-4">Ainda não existe nenhuma receita ou despesa cadastrada no sistema!</h4>
+                {% endif %} 
+
+                {% for route, values in fluxo.items %}
+                    <div class="mb-4" id="accordion{{forloop.counter}}">
+                        <div class="card">
+                            <div id="heading{{forloop.counter}}"
+                                {% if values.lucratividade > 0 %}  
+                                    class="card-header bg-success"
+                                {% elif values.lucratividade == 0 %}
+                                    class="card-header bg-secondary"
+                                {% else %}
+                                    class="card-header bg-danger"
+                                {% endif %} 
+                                >
+                                <button class="btn btn-block btn-lg text-white" data-toggle="collapse" data-target="#collapse{{forloop.counter}}" aria-expanded="true" aria-controls="collapse{{forloop.counter}}">
+                                    <span class="font-weight-bold">{{route}} (Lucratividade: R$ {{values.lucratividade}})</span>
+                                </button>
+                            </div>
+                            <div id="collapse{{forloop.counter}}" class="collapse show" aria-labelledby="heading{{forloop.counter}}" data-parent="#accordion{{forloop.counter}}">
+                                <div class="card-body">
+                                    <div class="row justify-content-end mr-2 mb-3">
+                                        <button type="button" class="btn btn-dark text-warning font-weight-bold">
+                                            Saldo final do mês R$ <span class="badge badge-light">{{ values.saldoFinal }}</span>
+                                        </button>
+                                    </div>
+                                    <div class="row ml-1 mb-2">
+                                        <div class="card border-dark" style="width: 18rem;">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Fluxo realizado</h5>
+                                                <button type="button" class="btn btn-success text-dark font-weight-bold mb-1">
+                                                    Valor recebido R$ <span class="badge badge-light">{{ values.saldoRecebido|floatformat:2 }}</span>
+                                                </button>
+                                                <button type="button" class="btn btn-danger text-dark font-weight-bold mt-1">
+                                                    Valor pago R$ <span class="badge badge-light">{{ values.saldoPago|floatformat:2 }}</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card ml-2 border-dark" style="width: 18rem;">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Fluxo previsto</h5>
+                                                <button type="button" class="btn btn-success text-dark font-weight-bold mb-1">
+                                                    Valor a receber R$ <span class="badge badge-light">{{ values.saldoReceber|floatformat:2 }}</span>
+                                                </button>
+                                                <button type="button" class="btn btn-danger text-dark font-weight-bold mb-1 mt-1">
+                                                    Valor a pagar R$ <span class="badge badge-light">{{ values.saldoPagar|floatformat:2 }}</span>
+                                                </button>
+                                                <button type="button" class="btn btn-warning text-dark font-weight-bold mt-1">
+                                                    Saldo previsto R$ <span class="badge badge-light">{{ values.saldoPrevisto|floatformat:2 }}</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="jumbotron p-2 mb-3">
+                                        <h3>RECEITAS</h3>
+                                        {% if values.receitas %} 
+                                            <table class="table table-bordered table-hover table-sm table-responsive-xl">
+                                                <thead class="thead-dark">
+                                                    <tr> 
+                                                        <th scope="col" style="width: 10%">Data expectativa</th>
+                                                        <th scope="col" style="width: 13%">Classificação</th>
+                                                        <th scope="col" style="width: 10%">Forma recebimento</th>
+                                                        <th scope="col" style="width: 15%">Descrição</th>
+                                                        <th scope="col" style="width: 10%">Data recebimento</th>
+                                                        <th scope="col" style="width: 8%">Situação</th>
+                                                        <th scope="col" style="width: 9%">Valor (R$)</th>
+                                                        <th scope="col" style="width: 13%" class="bg-dark text-warning">Saldo acumulado (R$)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for receita in values.receitas %}
+                                                        {% if receita.situacao == 'PR' %}  
+                                                        <tr class="table-success">
+                                                        {% else %}
+                                                        <tr>
+                                                        {% endif %}  
+                                                            <td>{{receita.data_expectativa}}</td>
+                                                            <td>{{receita.get_classificacao_display}}</td>
+                                                            <td>{{receita.get_formaRecebimento_display}}</td>
+                                                            <td>{{receita.descricao}}</td>
+                                                            <td>
+                                                                {% if receita.data_recebimento %}   
+                                                                    {{receita.data_recebimento}}
+                                                                {% endif %}      
+                                                            </td>
+                                                            <td>{{receita.get_situacao_display}}</td>
+                                                            {% if receita.situacao == 'PR' %}  
+                                                            <td class="text-success font-weight-bold">
+                                                                +{{receita.valor}} 
+                                                            </td>
+                                                            <td class="font-weight-bold bg-dark text-warning">
+                                                                {{receita.saldoAcumulado}}
+                                                            </td>
+                                                            {% else %}
+                                                            <td>
+                                                                {{receita.valor}} 
+                                                            </td>
+                                                            <td>
+                                                            </td>
+                                                            {% endif %}  
+                                                            <td>
+                                                                <div class="row ml-1">
+                                                                    <form action="/receita/{{receita.id}}" method="get" class="">
+                                                                        <div class="form-row">
+                                                                            <button class="btn btn-outline-primary btn-light btn-sm" title="Edita a receita" type='submit'>
+                                                                                <span class="iconify" data-icon="el:pencil" style="width: 16px; height: 16px;"></span>
+                                                                            </button>
+                                                                        </div>
+                                                                    </form>
+
+                                                                    <button class="btn btn-outline-danger btn-light btn-sm ml-2" title="Deleta a receita" onclick="deleteReceita('{{receita.id}}')">
+                                                                        <span class="iconify" data-icon="octicon:trashcan" style="width: 16px; height: 16px;"></span>
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        {% endif %} 
+                                        <button type="button" class="btn btn-dark text-white font-weight-bold">
+                                            Quantidade <span class="badge badge-light">{{ values.receitas|length }}</span>
+                                        </button>
+                                    </div>
+                                    <div class="jumbotron p-2 mb-3">
+                                        <h3>DESPESAS</h3>
+                                        {% if values.despesas %} 
+                                            <table class="table table-bordered table-hover table-sm table-responsive-xl">
+                                                <thead class="thead-dark">
+                                                    <tr> 
+                                                        <th scope="col" style="width: 10%">Data vencimento</th>
+                                                        <th scope="col" style="width: 13%">Classificação</th>
+                                                        <th scope="col" style="width: 10%">Forma pagamento</th>
+                                                        <th scope="col" style="width: 15%">Descrição</th>
+                                                        <th scope="col" style="width: 10%">Data pagamento</th>
+                                                        <th scope="col" style="width: 8%">Situação</th>
+                                                        <th scope="col" style="width: 9%">Valor (R$)</th>
+                                                        <th scope="col" style="width: 13%" class="bg-dark text-warning">Saldo acumulado (R$)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for despesa in values.despesas %}
+                                                        {% if despesa.situacao == 'PG' %}  
+                                                        <tr class="table-danger">
+                                                        {% else %}
+                                                        <tr>
+                                                        {% endif %}  
+                                                            <td>{{despesa.data_vencimento}}</td>
+                                                            <td>{{despesa.get_classificacao_display}}</td>
+                                                            <td>{{despesa.get_formaPagamento_display}}</td>
+                                                            <td>{{despesa.descricao}}</td>
+                                                            <td>
+                                                                {% if despesa.data_pagamento %}   
+                                                                    {{despesa.data_pagamento}}
+                                                                {% endif %}      
+                                                            </td>
+                                                            <td>{{despesa.get_situacao_display}}</td>
+                                                            {% if despesa.situacao == 'PG' %}  
+                                                            <td class="text-danger font-weight-bold">
+                                                                -{{despesa.valor}} 
+                                                            </td>
+                                                            <td class="font-weight-bold bg-dark text-warning">
+                                                                {{despesa.saldoAcumulado}}
+                                                            </td>
+                                                            {% else %}
+                                                            <td>
+                                                                {{despesa.valor}} 
+                                                            </td>
+                                                            <td>
+                                                            </td>
+                                                            {% endif %}  
+                                                            <td>
+                                                                <div class="row ml-1">
+                                                                    <form action="/despesa/{{despesa.id}}" method="get" class="">
+                                                                        <div class="form-row">
+                                                                            <button class="btn btn-outline-primary btn-light btn-sm" title="Edita a despesa" type='submit'>
+                                                                                <span class="iconify" data-icon="el:pencil" style="width: 16px; height: 16px;"></span>
+                                                                            </button>
+                                                                        </div>
+                                                                    </form>
+
+                                                                    <button class="btn btn-outline-danger btn-light btn-sm ml-2" title="Deleta a despesa" onclick="deleteDespesa('{{despesa.id}}')">
+                                                                        <span class="iconify" data-icon="octicon:trashcan" style="width: 16px; height: 16px;"></span>
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        {% endif %} 
+                                        <button type="button" class="btn btn-dark text-white font-weight-bold">
+                                            Quantidade <span class="badge badge-light">{{ values.despesas|length }}</span>
+                                        </button>
+                                    </div>
+                                    <div class="row justify-content-end mr-2">
+                                        <button type="button" class="btn btn-dark text-warning font-weight-bold">
+                                            Saldo inicial do mês R$ <span class="badge badge-light">{{ values.saldoInicial }}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            
+                <div class="mb-3">
+                    <button type="button" class="btn btn-dark text-white font-weight-bold">
+                        Saldo inicial R$ <span class="badge badge-light">
+                                {{saldoInicial}}
+                            </span>
+                    </button>
+                    <button class="btn btn-outline-dark btn-light btn-sm" title="Edita o saldo inicial" onclick="editSaldoInicial('{{saldoInicial}}')">
+                        <span class="iconify" data-icon="el:pencil" style="width: 16px; height: 16px;"></span>
+                    </button>
+                </div>
+            {% endif %} 
+
+            <div id="idDivSaldoInicial" 
+                {% if saldoInicial != None %}   
+                    class="d-none"
+                {% endif %}> 
+                    <h4 class="mt-5">Por favor, informe o saldo inicial (R$)</h4>
+                    <form action="/" method="post" class="mt-3 mb-5">
+                        <div class="form-row">
+                            <input type="number" class="form-control-sm col-sm-2" step='0.01' placeholder='0.00' class="form-control" id="inputSaldoInicial" name="saldoInicial" value="0.00">
+                            <button type="submit" class="btn btn-dark btn-sm ml-2 col-sm-1"><span id="idSpanBtnSaldoInicial">Adicionar</span></button>
+                        </div>
+                    </form>
+            </div>
+        </div>
+
+        <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <!--script src="http://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    </body>
+</html>

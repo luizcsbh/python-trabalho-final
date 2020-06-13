@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-br">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+        <title>Relatório de contas a receber</title>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Gerenciamento financeiro</h1>
+            <h6>Feito em Python</h6>
+
+            <ul class="nav justify-content-center nav-pills">
+                <li class="nav-item">
+                    <a class="nav-link border" href="/"><h4>Fluxo de caixa</h4></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link border" href="/despesa/"><h4>Nova despesa</h4></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link border" href="/receita/"><h4>Nova receita</h4></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link border" href="/relatorio/despesas"><h4>Contas a pagar</h4></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active border" href="/relatorio/receitas"><h4>Contas a receber</h4></a>
+                </li>
+            </ul>
+
+            <h4 class="mt-4">Relatório de contas a receber</h4>
+            <form action="/relatorio/receitas/filtro" method="post" class="mt-5 mb-5">
+                <div class="form-row mt-2">
+                    <label for="inputDate" class="col-sm-2 font-weight-bold">Data expectativa: </label>
+                    <input type="date" class="form-control-sm col-sm-2" id="inputDate" name="data_filtro" value="{{dateMax}}" required>
+                
+                    <button type="submit" class="btn btn-dark btn-sm ml-2 col-sm-1">Filtrar</button>
+                </div>
+            </form>
+            {% if receitas %}
+                <button type="button" class="btn btn-dark mb-1 mt-1">
+                    Quantidade <span class="badge badge-light">{{ receitas|length }}</span>
+                </button>
+                <table class="table table-bordered table-striped table-sm" id="tableRelatorio">
+                    <thead>
+                        <tr class="bg-dark text-white"> 
+                            <th scope="col" style="width: 15%">Data expectativa</th>
+                            <th scope="col" style="width: 25%">Descrição</th>
+                            <th scope="col" style="width: 15%">Classificação</th>
+                            <th scope="col" style="width: 15%">Forma de recebimento</th>
+                            <th scope="col" style="width: 10%">Valor (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for receita in receitas %}
+                            <tr>
+                                <td>{{receita.data_expectativa}}</td>
+                                <td>{{receita.descricao}}</td>
+                                <td>{{receita.get_classificacao_display}}</td>
+                                <td>{{receita.get_formaRecebimento_display}}</td>
+                                <td>{{receita.valor}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="d-flex justify-content-end">
+                    <button type="button" class="btn btn-success mb-1 mt-1">
+                        Valor total a receber <span class="badge badge-light">R$ {{ valorTotal }}</span>
+                    </button>
+                </div>
+            {% else %}
+                <div class="d-flex justify-content-center">
+                    <h3>Não existem contas a receber até a data {{dateMaxBr}}</h3>
+                </div>
+            {% endif %}  
+        </div>
+    </body>
+</html>
