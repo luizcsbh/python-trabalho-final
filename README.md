@@ -5,7 +5,7 @@
 ![code-size](https://img.shields.io/github/languages/code-size/luizcsbh/python-trabalho-final)
 [![commit activity](https://img.shields.io/github/commit-activity/m/luizcsbh/python-trabalho-final)](https://github.com/luizcsbh/python-trabalho-final/commits)
 [![last commit](https://img.shields.io/github/last-commit/luizcsbh/python-trabalho-final)](https://github.com/luizcsbh/python-trabalho-final/commits)
-[![twwiter follow](https://img.shields.io/twitter/follow/luizcs?style=social)](https://twitter.com/luizcs)
+
 
 
 # Fluxo Financeiro
