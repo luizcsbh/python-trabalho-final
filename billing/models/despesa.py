@@ -4,7 +4,7 @@ class Despesa(models.Model):
     CLASSIFICACAO_CHOICES = (
         ('AG', 'Água'),
         ('AL', 'Alimentação'),
-        ('AG', 'Aluguel'),
+        ('AU', 'Aluguel'),
         ('EN', 'Energia'),
         ('LA', 'Lazer'),
         ('OU', 'Outros'),
