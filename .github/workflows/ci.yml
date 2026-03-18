@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test:
+    name: Lint, Audit & Django Check
+    runs-on: ubuntu-latest
+
+    env:
+      DJANGO_SETTINGS_MODULE: managementfinances.settings
+      SECRET_KEY: ci-insecure-secret-key-for-testing-only
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Security audit (pip-audit)
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: Run migrations (dry-run check)
+        run: python manage.py migrate --run-syncdb
+
+      - name: Run tests
+        run: python manage.py test --verbosity=2
